@@ -4,9 +4,7 @@
 
 Authors: İlker Mert\*, Hüseyin Yağlı
 
-This repository contains representative code excerpts, the numerical input data and methodological documentation for the research article (under review, *Energy Conversion and Management*, ECM-D-26-11544).
-
-> **Note on scope.** The code blocks below are representative excerpts of the core methodological steps, included for transparency. The complete analysis script is not included (see [Contact and Data Availability](#contact-and-data-availability)). The numerical input data are given in the tables of this README. This repository does not allow all tables and figures of the paper to be reproduced by running a script.
+This repository contains methodological documentation, representative code excerpts and the numerical input data for the research article (under review, *Energy Conversion and Management*).
 
 ## About the Study
 
@@ -355,6 +353,8 @@ Released under the MIT License (see `LICENSE`).
 
 ## Contact and Data Availability
 
-The numerical input data of the study are given in the tables of this README. The complete analysis script is not publicly available because it forms part of ongoing research. Summary results of all analyses are provided in the Supplementary Material of the paper.
+The numerical input data of the study are given in the tables of this README, and representative code excerpts of the core methodological steps are given in the method sections above. The complete analysis script is not shared at this time because the same code base is being used in other ongoing studies. It is available from the corresponding author on reasonable request. Summary results of all analyses are provided in the Supplementary Material of the paper.
 
 Maintainer: İlker Mert (ilkermert@osmaniye.edu.tr)
+
+> **Note on scope.** The code blocks above are representative excerpts of the core methodological steps, included for transparency. This repository does not allow all tables and figures of the paper to be reproduced by running a script.
