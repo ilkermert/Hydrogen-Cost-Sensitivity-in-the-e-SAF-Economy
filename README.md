@@ -30,7 +30,11 @@ All inputs are sampled from triangular distributions (minimum, mode, maximum), g
 The input ranges follow the literature-based Monte Carlo approach of Wolf et al. [9] and are documented in Table 1 of the article. The inverse CDF of the triangular distribution with minimum $a$, mode $m$ and maximum $b$, and $c=(m-a)/(b-a)$:
 
 ```math
-x(u)=\begin{cases} a+\sqrt{u\,(b-a)(m-a)}, & u<c\\ b-\sqrt{(1-u)(b-a)(b-m)}, & u\ge c \end{cases}
+x(u)=a+\sqrt{u\,(b-a)(m-a)}\quad\text{for } u<c
+```
+
+```math
+x(u)=b-\sqrt{(1-u)(b-a)(b-m)}\quad\text{for } u\ge c
 ```
 
 ```python
