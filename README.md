@@ -6,7 +6,7 @@ Authors: İlker Mert\*, Hüseyin Yağlı
 
 This repository contains representative code excerpts, the numerical input data and methodological documentation for the research article (under review, *Energy Conversion and Management*, ECM-D-26-11544).
 
-> **Note on scope.** The code blocks below are representative excerpts of the core methodological steps, included for transparency. The complete analysis script is not included (see [Contact and Data Availability](#contact-and-data-availability)). The numerical input data are in `data.xlsx`. This repository does not allow all tables and figures of the paper to be reproduced by running a script.
+> **Note on scope.** The code blocks below are representative excerpts of the core methodological steps, included for transparency. The complete analysis script is not included (see [Contact and Data Availability](#contact-and-data-availability)). The numerical input data are given in the tables of this README. This repository does not allow all tables and figures of the paper to be reproduced by running a script.
 
 ## About the Study
 
@@ -25,7 +25,7 @@ LCOP is the cost per kilogram of total hydrocarbon product of a CO2-to-hydrocarb
 
 ## 1. Input Distributions and Sampling
 
-All inputs are sampled from triangular distributions (minimum, mode, maximum), given in the sheet `MC_Parameters` of `data.xlsx`. One matrix of uniform random numbers is drawn once and reused for every comparison between countries or horizons (common random numbers), so differences do not come from sampling noise. Inputs are independent in the baseline. Dependence is examined in separate scenarios.
+All inputs are sampled from triangular distributions (minimum, mode, maximum), given in the Parameters table below. One matrix of uniform random numbers is drawn once and reused for every comparison between countries or horizons (common random numbers), so differences do not come from sampling noise. Inputs are independent in the baseline. Dependence is examined in separate scenarios.
 
 The input ranges follow the literature-based Monte Carlo approach of Wolf et al. [9] and are documented in Table 1 of the article. The inverse CDF of the triangular distribution with minimum $a$, mode $m$ and maximum $b$, and $c=(m-a)/(b-a)$:
 
@@ -209,21 +209,84 @@ S["synthesis_cost_usd_per_kg"] = Sb["synthesis_cost_usd_per_kg"] * (1 - tri_ppf(
 ## Data Sources
 
 - **Electricity prices:** monthly means of 2025 day-ahead wholesale prices by country (Ember, 2026, based on ENTSO-E data). These are not prices paid by an electrolyser.
-- **Projects:** synfuel projects of the IEA Hydrogen Production and Infrastructure Projects Database (June 2026 release), used for criterion C4. Project-level records of the ten countries are in the sheet `C4_Projects`.
+- **Projects:** synfuel projects of the IEA Hydrogen Production and Infrastructure Projects Database (June 2026 release), used for criterion C4. Project counts of the ten countries are given in the Input Data section.
 
-## Input Workbook (`data.xlsx`)
+## Input Data
 
-| Sheet | Content |
-|---|---|
-| MC_Parameters | Minimum, mode and maximum of each input with source and basis |
-| Country_Electricity, Country_Elec_Monthly_2025 | Country selection and twelve monthly mean prices |
-| EWM_Indicators, Country_Grid_Mix | Raw indicator values for C2, C4, C5, C6 and C7 |
-| C4_Project_Status, C4_Projects | Project counts by status and project-level records behind C4 |
-| EWM_Coding_Rules | Definition, direction and coding rule of each criterion |
-| Roadmap_LearningRates | Scenario changes for 2030 and 2050 |
-| Reference_Case_Wolf2024 | Reference case used to check the LCOH equation |
-| Settings | Sample sizes, seed and exchange rate |
-| Sources | Data sources and links |
+The numerical inputs of the study are shown below. The values are those used for the results of the article.
+
+### Input distributions
+
+See the Parameters table above (Table 1 of the article).
+
+### Monthly mean day-ahead wholesale electricity prices, 2025 (EUR/MWh)
+
+The minimum, median and maximum of the twelve monthly means are the minimum, mode and maximum of the national triangular price distribution. Source: Ember [33], based on ENTSO-E data. The prices exclude grid charges, taxes and procurement arrangements.
+
+| Country | Min | Median (mode) | Max |
+|---|---|---|---|
+| Sweden | 19.83 | 42.22 | 61.45 |
+| Spain | 16.99 | 71.38 | 108.26 |
+| Poland | 81.52 | 101.53 | 133.81 |
+| Germany | 64.14 | 86.02 | 129.35 |
+| Netherlands | 64.21 | 85.64 | 125.81 |
+| Czechia | 73.12 | 93.77 | 132.62 |
+| France | 19.44 | 57.66 | 122.63 |
+| Austria | 66.67 | 98.09 | 140.77 |
+| Romania | 78.26 | 104.94 | 157.17 |
+| Italy | 109.10 | 119.31 | 142.33 |
+
+### Readiness index indicators
+
+C1 (LCOP) is a model output. C3 is not included. C2, C5, C6 and C7 as defined in the article; C4 is the maturity-weighted score of PtL project records.
+
+| Country | C2 grid intensity (gCO2/kWh) | C4 project score | C5 policy code | C6 GDP per capita (PPS, EU=100) | C7 renewables / demand (%) |
+|---|---|---|---|---|---|
+| Sweden | 35.3 | 36.55 | 0 | 115 | 88.9 |
+| Spain | 153.6 | 99.32 | 1 | 90 | 58.5 |
+| Poland | 590.9 | 0.00 | 0 | 85 | 31.1 |
+| Germany | 330.0 | 57.60 | 2 | 125 | 56.8 |
+| Netherlands | 253.6 | 30.46 | 1 | 134 | 57.2 |
+| Czechia | 401.9 | 0.00 | 0 | 91 | 18.5 |
+| France | 41.5 | 92.78 | 1 | 95 | 31.2 |
+| Austria | 117.2 | 0.00 | 1 | 125 | 79.1 |
+| Romania | 259.6 | 0.00 | 0 | 72 | 43.7 |
+| Italy | 284.7 | 10.45 | 0 | 93 | 41.4 |
+
+### PtL project records behind C4
+
+Projects of the IEA Hydrogen Production and Infrastructure Projects Database (June 2026 release), synfuel end-use flag.
+
+| Country | Projects | Announced | Demo | FID/Construction | Operational | Other | Capacity (kt H2/y) |
+|---|---|---|---|---|---|---|---|
+| Sweden | 8 | 6.0 | 0 | 0 | 0 | 2.0 | 420.5 |
+| Spain | 18 | 16.0 | 1 | 1 | 0 | 0.0 | 668.8 |
+| Poland | 0 | 0.0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| Germany | 20 | 7.0 | 6 | 1 | 2 | 4.0 | 469.3 |
+| Netherlands | 7 | 4.0 | 1 | 0 | 0 | 2.0 | 481.2 |
+| Czechia | 0 | 0.0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| France | 21 | 13.0 | 1 | 0 | 0 | 7.0 | 912.1 |
+| Austria | 0 | 0.0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| Romania | 0 | 0.0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| Italy | 2 | 2.0 | 0 | 0 | 0 | 0.0 | 34.7 |
+
+### Scenario changes for 2030 and 2050 (relative to 2025)
+
+Fractional reduction is applied as (1 - change) and fractional change as (1 + change). Efficiency is given as an absolute range in kWh/kg H2.
+
+| Variable | Year | Type | Min | Mode | Max |
+|---|---|---|---|---|---|
+| capex_usd_per_kw | 2030 | fractional reduction | 0.15 | 0.35 | 0.5 |
+| capex_usd_per_kw | 2050 | fractional reduction | 0.35 | 0.65 | 0.8 |
+| co2_price_usd_per_t | 2030 | fractional reduction | 0.1 | 0.25 | 0.4 |
+| co2_price_usd_per_t | 2050 | fractional reduction | 0.4 | 0.65 | 0.85 |
+| elec_price_usd_per_mwh | 2030 | fractional change | -0.2 | 0 | 0.15 |
+| elec_price_usd_per_mwh | 2050 | fractional change | -0.15 | 0.1 | 0.3 |
+| synthesis_cost_usd_per_kg | 2030 | fractional reduction | 0.02 | 0.08 | 0.15 |
+| synthesis_cost_usd_per_kg | 2050 | fractional reduction | 0.08 | 0.2 | 0.35 |
+| efficiency_kwh_per_kg | 2025 | absolute kwh per kg | 46 | 51 | 57 |
+| efficiency_kwh_per_kg | 2030 | absolute kwh per kg | 44 | 49 | 54 |
+| efficiency_kwh_per_kg | 2050 | absolute kwh per kg | 38 | 43 | 48 |
 
 ## Software Environment
 
@@ -292,6 +355,6 @@ Released under the MIT License (see `LICENSE`).
 
 ## Contact and Data Availability
 
-The numerical input data of the study are in `data.xlsx`. The complete analysis script is not publicly available because it forms part of ongoing research. Summary results of all analyses are provided in the Supplementary Material of the paper.
+The numerical input data of the study are given in the tables of this README. The complete analysis script is not publicly available because it forms part of ongoing research. Summary results of all analyses are provided in the Supplementary Material of the paper.
 
 Maintainer: İlker Mert (ilkermert@osmaniye.edu.tr)
