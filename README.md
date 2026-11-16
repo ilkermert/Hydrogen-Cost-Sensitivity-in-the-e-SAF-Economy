@@ -21,17 +21,17 @@ LCOP is the cost per kilogram of total hydrocarbon product of a CO2-to-hydrocarb
 | ewm | Readiness index, robustness to weights, normalisation, country subsets and perturbed indicators |
 | sensitivity | PRCC, Sobol indices, scenarios, dependence scenarios, plant-scale sensitivity |
 | horizon | Scenario-based projection for 2030 and 2050 |
-| reference | Reproduction of an independent reference case (Wolf et al., 2024) |
+| reference | Reproduction of an independent reference case (Wolf et al. [9]) |
 
 ## 1. Input Distributions and Sampling
 
 All inputs are sampled from triangular distributions (minimum, mode, maximum), given in the sheet `MC_Parameters` of `data.xlsx`. One matrix of uniform random numbers is drawn once and reused for every comparison between countries or horizons (common random numbers), so differences do not come from sampling noise. Inputs are independent in the baseline. Dependence is examined in separate scenarios.
 
-The inverse CDF of the triangular distribution with minimum $a$, mode $m$ and maximum $b$, and $c=(m-a)/(b-a)$:
+The input ranges follow the literature-based Monte Carlo approach of Wolf et al. [9] and are documented in Table 1 of the article. The inverse CDF of the triangular distribution with minimum $a$, mode $m$ and maximum $b$, and $c=(m-a)/(b-a)$:
 
-$$
-x(u)=\begin{cases} a+\sqrt{u\,(b-a)(m-a)}, & u<c\\[2pt] b-\sqrt{(1-u)(b-a)(b-m)}, & u\ge c \end{cases}
-$$
+```math
+x(u)=\begin{cases} a+\sqrt{u\,(b-a)(m-a)}, & u<c\\ b-\sqrt{(1-u)(b-a)(b-m)}, & u\ge c \end{cases}
+```
 
 ```python
 def tri_ppf(u, a, m, b):
@@ -50,19 +50,19 @@ def draw(U_, overrides=None):
 
 ## 2. LCOH and LCOP
 
-$$
+```math
 \mathrm{CRF}=\frac{w\,(1+w)^{L}}{(1+w)^{L}-1}
-$$
+```
 
-$$
+```math
 \mathrm{LCOH}=\frac{\mathrm{CAPEX}\,(\mathrm{CRF}+f_{OM})\,\eta}{8760\cdot \mathrm{CF}}+\frac{P_e\,\eta}{1000}
-$$
+```
 
-$$
+```math
 \mathrm{LCOP}=\alpha\,\mathrm{LCOH}+\beta\,\frac{P_{CO_2}}{1000}+\gamma
-$$
+```
 
-CAPEX is in USD/kW, $\eta$ is the specific electricity consumption in kWh/kg H2 and $P_e$ is the electricity price in USD/MWh. The coefficients $\alpha$ and $\beta$ are effective feedstock requirements per kg of total hydrocarbon product. Their lower bounds are the stoichiometric minima of a jet-range n-alkane (C12H26), rounded to two decimals (0.44 and 3.10). The synthesis cost $\gamma$ excludes hydrogen and CO2 supply.
+The LCOH equation and the capital recovery factor follow Wolf et al. [9]. CAPEX is in USD/kW, $\eta$ is the specific electricity consumption in kWh/kg H2 and $P_e$ is the electricity price in USD/MWh. The coefficients $\alpha$ and $\beta$ are effective feedstock requirements per kg of total hydrocarbon product. Their lower bounds are the stoichiometric minima of a jet-range n-alkane (C12H26), rounded to two decimals (0.44 and 3.10). The transfer function follows the stoichiometric conversion of [5]. The synthesis cost $\gamma$ excludes hydrogen and CO2 supply. Its mode is calibrated on the non-feedstock cost share reported by Bube et al. [8].
 
 ```python
 def model(S, capex_f=1.0, pe_f=1.0, dw=0.0, cf_add=0.0, co2p=None, h2_f=1.0):
@@ -82,7 +82,7 @@ def model(S, capex_f=1.0, pe_f=1.0, dw=0.0, cf_add=0.0, co2p=None, h2_f=1.0):
 
 ## 3. Country-Level Application
 
-For each country, the aggregate electricity price distribution is replaced by a triangular distribution defined by the minimum, median and maximum of the twelve monthly means of the 2025 day-ahead wholesale price (EUR/MWh, converted at 1.09 USD/EUR). The prices are wholesale prices and exclude grid charges, taxes and procurement arrangements. All other draws are shared between the countries.
+For each country, the aggregate electricity price distribution is replaced by a triangular distribution defined by the minimum, median and maximum of the twelve monthly means of the 2025 day-ahead wholesale price (EUR/MWh, converted at 1.09 USD/EUR) from [33]. The prices are wholesale prices and exclude grid charges, taxes and procurement arrangements. All other draws are shared between the countries.
 
 ```python
 for _, r in country_elec.iterrows():
@@ -93,15 +93,15 @@ for _, r in country_elec.iterrows():
 
 ## 4. Readiness Index (EWM)
 
-The index uses six criteria: C1 (LCOP), C2 (grid carbon intensity), C4 (maturity-weighted PtL project score), C5 (policy code 0 to 2), C6 (GDP per capita in PPS) and C7 (renewable generation over demand). The legal criterion C3 is not included.
+The index uses six criteria: C1 (LCOP), C2 (grid carbon intensity), C4 (maturity-weighted PtL project score), C5 (policy code 0 to 2), C6 (GDP per capita in PPS) and C7 (renewable generation over demand). The legal criterion C3 is not included. The index approach follows Neofytou et al. [24]. Grid intensity and the renewable-to-demand ratio are from Ember [56].
 
 The C4 score of a country is the sum over its projects of the status weight times $(1+\ln(1+\text{capacity in kt H}_2\text{/y}))$.
 
-With normalised values $z_{ij}$, shares $p_{ij}=z_{ij}/\sum_i z_{ij}$, the entropy and weight of criterion $j$ are
+The method follows Zhu et al. [34]. EWM has been applied to hydrogen systems [36], distributed energy systems [37] and renewable energy under uncertainty [38], and its sensitivity to normalisation is discussed in [39]. With normalised values $z_{ij}$, shares $p_{ij}=z_{ij}/\sum_i z_{ij}$, the entropy and weight of criterion $j$ are
 
-$$
+```math
 e_j=-\frac{1}{\ln n}\sum_{i} p_{ij}\ln p_{ij},\qquad w_j=\frac{1-e_j}{\sum_k (1-e_k)}
-$$
+```
 
 Terms with $p_{ij}=0$ are omitted ($0\ln 0=0$). The weights describe the variation of a criterion in the selected dataset. They do not establish its causal importance.
 
@@ -125,7 +125,7 @@ Robustness is tested with equal weights, two alternative normalisations, leave-o
 
 ## 5. Sensitivity Analysis
 
-PRCC is computed on the residuals of the ranked input and ranked output after regression on the ten other ranked inputs. The p-value uses a t distribution with $N-2-10$ degrees of freedom. The confidence interval uses the Fisher transformation with standard error $1/\sqrt{N-3-10}$. PRCC is read as conditional monotonic association.
+PRCC is computed on the residuals of the ranked input and ranked output after regression on the ten other ranked inputs. The p-value uses a t distribution with $N-2-10$ degrees of freedom. The confidence interval uses the Fisher transformation with standard error $1/\sqrt{N-3-10}$. PRCC follows Marino et al. [25] and is read as conditional monotonic association.
 
 ```python
 def prcc(S, out):
@@ -141,11 +141,11 @@ def prcc(S, out):
         lo, hi = np.tanh(np.arctanh(r) - 1.96 * se), np.tanh(np.arctanh(r) + 1.96 * se)
 ```
 
-The contribution of each input to the variance of LCOP is estimated with Sobol first-order and total-order indices (Saltelli and Jansen estimators, 200,000 base samples, 300 bootstrap resamples):
+The contribution of each input to the variance of LCOP is estimated with Sobol first-order and total-order indices (Saltelli and Jansen estimators as described in the article, 200,000 base samples, 300 bootstrap resamples):
 
-$$
+```math
 S_i=\frac{\mathrm{E}\left[y_B\,(y_{AB_i}-y_A)\right]}{\mathrm{Var}(y)},\qquad S_{T_i}=\frac{\mathrm{E}\left[(y_A-y_{AB_i})^2\right]}{2\,\mathrm{Var}(y)}
-$$
+```
 
 ```python
 yA = model(draw(A_))[1]; yB = model(draw(B_))[1]
@@ -157,7 +157,7 @@ for name, key in PR.items():
     ST = 0.5 * np.mean((yA - yAB) ** 2) / var
 ```
 
-The one-at-a-time scenarios are conditional results of this cost model, not an assessment of policy instruments. The plant-scale sensitivity multiplies the synthesis cost component only (factors 1.30 and 1.50) on the same samples. The factor 1.30 is motivated by the reported cost increase for plants below about 30 kt/a. The factor 1.50 is a stress test. Neither is a literature-derived scale coefficient.
+The one-at-a-time scenarios are conditional results of this cost model, not an assessment of policy instruments. The plant-scale sensitivity multiplies the synthesis cost component only (factors 1.30 and 1.50) on the same samples. The factor 1.30 is motivated by the cost increase above 30% reported in [8] for plants below about 30 kt/a. The factor 1.50 is a stress test. Neither is a literature-derived scale coefficient.
 
 ```python
 for n_, f_ in [("Baseline", 1.0), ("Scale-adjusted", 1.30), ("High scale penalty", 1.50)]:
@@ -167,7 +167,7 @@ for n_, f_ in [("Baseline", 1.0), ("Scale-adjusted", 1.30), ("High scale penalty
 
 ## 6. Time-Horizon Projection
 
-The projection for 2030 and 2050 applies scenario-based percentage changes relative to 2025 to CAPEX, CO2 price, electricity price and synthesis cost, and a horizon-specific range to the specific electricity consumption. These are not experience curves based on cumulative deployment. The base inputs, including the stoichiometric ratios, are drawn once and kept along all horizons. The quantile of each change variable is the same in 2030 and 2050.
+The projection for 2030 and 2050 applies scenario-based percentage changes relative to 2025 to CAPEX, CO2 price, electricity price and synthesis cost, and a horizon-specific range to the specific electricity consumption. The changes are informed by learning-rate literature [41, 42, 43, 44] and electricity outlooks [45, 30], and are not experience curves based on cumulative deployment. The base inputs, including the stoichiometric ratios, are drawn once and kept along all horizons. The quantile of each change variable is the same in 2030 and 2050.
 
 ```python
 U_t = rng_t.random((N_RM, 4))
@@ -238,10 +238,43 @@ Headline results of the paper (seed 42): median LCOH 6.33 USD/kg, median LCOP 6.
 
 ## References
 
-1. Wolf et al. (2024), reference case for the 2050 LCOH of EU countries, as cited in the article.
-2. Saltelli A, Annoni P, Azzini I, Campolongo F, Ratto M, Tarantola S. Variance based sensitivity analysis of model output. Design and estimator for the total sensitivity index. *Comput Phys Commun* 2010;181:259-70.
-3. Jansen MJW. Analysis of variance designs for model output. *Comput Phys Commun* 1999;117:35-43.
-4. Blower SM, Dowlatabadi H. Sensitivity and uncertainty analysis of complex models of disease transmission: an HIV model, as an example. *Int Stat Rev* 1994;62:229-43.
+Numbering follows the reference list of the article.
+
+[5] Drünert, S., Neuling, U., Zitscher, T., & Kaltschmitt, M. (2020). Power-to-Liquid fuels for aviation: Processes, resources and supply potential under German conditions. *Applied Energy*, 277, 115578. https://doi.org/10.1016/j.apenergy.2020.115578
+
+[8] Bube, S., Voß, S., Quante, G., & Kaltschmitt, M. (2025). Cost analysis of kerosene production from power-based syngas via the Fischer-Tropsch and methanol pathway. *Fuel*, 384, 133901. https://doi.org/10.1016/j.fuel.2024.133901
+
+[9] Wolf, N., Tanneberger, M. A., & Höck, M. (2024). Levelized cost of hydrogen production in Northern Africa and Europe in 2050: A Monte Carlo simulation for Germany, Norway, Spain, Algeria, Morocco, and Egypt. *International Journal of Hydrogen Energy*, 69, 184–194. https://doi.org/10.1016/j.ijhydene.2024.04.319
+
+[24] Neofytou, H., Nikas, A., & Doukas, H. (2020). Sustainable energy transition readiness: A multicriteria assessment index. *Renewable and Sustainable Energy Reviews*, 131, 109988. https://doi.org/10.1016/j.rser.2020.109988
+
+[25] Marino, S., Hogue, I. B., Ray, C. J., & Kirschner, D. E. (2008). A methodology for performing global uncertainty and sensitivity analysis in systems biology. *Journal of Theoretical Biology*, 254(1), 178–196. https://doi.org/10.1016/j.jtbi.2008.04.011
+
+[30] International Energy Agency. (2022). Direct air capture: A key technology for net zero. OECD Publishing. https://doi.org/10.1787/bbd20707-en
+
+[33] Ember. (2026). European wholesale electricity price data, monthly (day-ahead prices from ENTSO-E) [Data set]. https://ember-energy.org/data/european-wholesale-electricity-price-data/
+
+[34] Zhu, Y., Tian, D., & Yan, F. (2020). Effectiveness of entropy weight method in decision-making. *Mathematical Problems in Engineering*, 2020, 3564835. https://doi.org/10.1155/2020/3564835
+
+[36] Li, Z., Wang, Y., Xie, J., Cheng, Y., & Shi, L. (2024). Hybrid multi-criteria decision-making evaluation of multiple renewable energy systems considering the hysteresis band principle. *International Journal of Hydrogen Energy*, 49, 450–462. https://doi.org/10.1016/j.ijhydene.2023.09.059
+
+[37] Wang, W., Li, H., Hou, X., Zhang, Q., & Tian, S. (2021). Multi-criteria evaluation of distributed energy system based on order relation-anti-entropy weight method. *Energies*, 14(1), 246. https://doi.org/10.3390/en14010246
+
+[38] Sitorus, F., & Brito-Parada, P. R. (2020). A multiple criteria decision making method to weight the sustainability criteria of renewable energy technologies under uncertainty. *Renewable and Sustainable Energy Reviews*, 127, 109891. https://doi.org/10.1016/j.rser.2020.109891
+
+[39] Roszkowska, E., & Wachowicz, T. (2024). Impact of normalization on entropy-based weights in Hellwig's method: A case study on evaluating sustainable development in the education area. *Entropy*, 26(5), 365. https://doi.org/10.3390/e26050365
+
+[41] Glenk, G., Meier, R., & Reichelstein, S. (2021). Cost dynamics of clean energy technologies. *Schmalenbach Journal of Business Research*, 73(2), 179–206. https://doi.org/10.1007/s41471-021-00114-8
+
+[42] International Renewable Energy Agency. (2020). Green hydrogen cost reduction: Scaling up electrolysers to meet the 1.5°C climate goal. IRENA, Abu Dhabi. https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf
+
+[43] CleanTechnica. (2025, February 24). Hydrogen electrolysis cost projections from major organizations low by 60% to 300%. https://cleantechnica.com/2025/02/24/hydrogen-electrolysis-cost-projections-from-major-organizations-low-by-60-to-300/
+
+[44] National Energy Technology Laboratory. (2013). Technology learning curve (FOAK to NOAK) (Report No. DOE/NETL-341/081213). U.S. Department of Energy.
+
+[45] Montel Energy / Energy Brainpool. (2025). EU energy outlook: How will Europe evolve over the next 30 years? https://montel.energy/resources/blog/eu-energy-outlook-2050-how-will-europe-evolve-over-the-next-30-years
+
+[56] Ember. (2026). Yearly electricity data [Data set]. https://ember-energy.org/data/yearly-electricity-data/
 
 ## Citation
 
